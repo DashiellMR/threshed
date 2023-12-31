@@ -21,7 +21,7 @@ intents.message_content = True
 discord_client = discord.Client(intents=intents)
 
 
-#TODO: implement specific recent check
+#TODO: implement specific recent  check
 #      implement removal from json file
 #      make the recent matches prettier
 #      add average placement to recent games
