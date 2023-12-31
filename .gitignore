@@ -1,3 +1,4 @@
 # Ignore Environment Variables
 .env
 users.json
+.venv
