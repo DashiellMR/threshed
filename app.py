@@ -1,22 +1,14 @@
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
-import json
 import os
-import asyncio
 import requests
-import httpx
 from dotenv import load_dotenv
-from pulsefire.clients import RiotAPIClient
-from pulsefire.schemas import RiotAPISchema
-from pulsefire.taskgroups import TaskGroup
 
 load_dotenv()
 
-RIOT_KEY = os.getenv('RIOT_KEY')
 DISCORD_KEY = os.getenv('DISCORD_KEY')
 
-client = RiotAPIClient(default_headers={"X-Riot-Token": f"{RIOT_KEY}"})
 intents = discord.Intents.default()
 intents.messages = True
 intents.guild_messages = True
@@ -30,7 +22,6 @@ server_url = "http://localhost:5000"
 #      add average placement to recent games // NOT-STARTED
 #      add current rank to recent games // NOT-STARTED
 #      finish implementing stats menu // IN-PROGRESS
-#      conversion from json to sqlite // IN-PROGRESS
 #      implementation of flask backend // IN-PROGRESS
 
 @bot.event
@@ -43,11 +34,9 @@ async def add(ctx, args):
     account_data = {"discord_account": ctx.author.name,
                     "username": username, 
                     "tag": tag}
-    
-    # Send a POST request to Flask app
+
     response = requests.post(f'{server_url}/add', json=account_data)
 
-    # Check response
     if response.status_code == 200:
         await ctx.send(f"Successfully added user: {username}#{tag}")
     else:
@@ -72,26 +61,22 @@ async def recent(ctx, args):
                     "username": username, 
                     "tag": tag}
     response = requests.post(f'{server_url}/recent', json=account_data)
+    data = response.json()
+    average = sum(data)
+    average=average * .1
     if response.status_code == 200:
-        await ctx.send(f"Here are your recent 10 games: {response.text}")
+        await ctx.send(f"Here are your recent 10 games: {response.text}\nYour average placement was {round(average, 4)}.")
     else: 
         await ctx.send("Failed to retrieve match data, please check if your username and/or tag were inputted properly.")
-
-@bot.command(name='get')
-async def stats(ctx, args):
-    data = {"RIOT_KEY": args}
-    req = requests.post(f"{server_url}/add", json=data)
-    await ctx.send(req.json()["RIOT_KEY"])
 
 @bot.command(name='list')
 async def list(ctx):
     req = requests.get(f"{server_url}/list")
-    data = req.text
-    await ctx.send("Current User List:")
-    output = ""
-    #for item in data:
-        #output+=(f"{item["username"]}#{item["tag"]}\n")
-    await ctx.send(data)
+    data = req.json()
+    output = 'Current User List:\n'
+    for items in data:
+        output+=f"{items}\n"
+    await ctx.send(output)
 
 @bot.command(name='ping')
 async def ping(ctx):
