@@ -3,4 +3,5 @@
 users.json
 .venv
 
+# Should deal with that...?
 .DS_Store
